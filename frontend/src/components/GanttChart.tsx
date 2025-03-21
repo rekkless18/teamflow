@@ -16,8 +16,8 @@ interface GanttChartProps {
   versions: Version[];
 }
 
-// 状态颜色映射
-const statusColors = {
+// 状态颜色映射，明确索引类型
+const statusColors: { [key in 'planning' | 'development' | 'testing' | 'release' | 'completed']: string } = {
   planning: '#9333ea', // purple
   development: '#eab308', // yellow
   testing: '#06b6d4', // cyan
@@ -45,35 +45,56 @@ const GanttChart: React.FC<GanttChartProps> = ({ versions }) => {
       ? parseISO(version.end_date) 
       : version.end_date;
     
-    const duration = differenceInDays(endDate, startDate) + 1; // 包括开始和结束日期
+    let duration = 0;
+    // 确保 startDate 和 endDate 不是 undefined 再计算 duration
+    if (startDate && endDate) {
+      duration = differenceInDays(endDate, startDate) + 1; 
+    }
+
+    const versionWithStatus = version as Version & { status?: keyof typeof statusColors; name?: string };
     
     return {
       ...version,
-      name: version.name,
+      // 假设添加 name 属性到 Version 接口，这里做个默认处理
+      name: versionWithStatus.name || '未命名', 
       startDate,
       endDate,
       duration,
-      color: statusColors[version.status] || '#6b7280',
+      // 明确 status 类型并处理可能的 undefined
+      color: versionWithStatus.status 
+        ? statusColors[versionWithStatus.status] 
+        : '#6b7280',
     };
   });
 
-  // 对数据按开始日期排序
-  const sortedData = [...chartData].sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+  // 对数据按开始日期排序，处理可能的 undefined
+  const sortedData = [...chartData].sort((a, b) => {
+    if (!a.startDate && !b.startDate) return 0;
+    if (!a.startDate) return 1;
+    if (!b.startDate) return -1;
+    return a.startDate.getTime() - b.startDate.getTime();
+  });
 
   // 找出整个项目的时间跨度
   let minDate = sortedData[0]?.startDate || new Date();
   let maxDate = sortedData[0]?.endDate || new Date();
 
   sortedData.forEach(item => {
-    if (item.startDate < minDate) minDate = item.startDate;
-    if (item.endDate > maxDate) maxDate = item.endDate;
+    // 处理 startDate 可能为 undefined 的情况
+    if (item.startDate && item.startDate < minDate) {
+      minDate = item.startDate;
+    }
+    // 处理 endDate 可能为 undefined 的情况
+    if (item.endDate && item.endDate > maxDate) {
+      maxDate = item.endDate;
+    }
   });
 
   // 为了美观，稍微扩大时间范围
   minDate = addDays(minDate, -1);
   maxDate = addDays(maxDate, 1);
 
-  // 格式化工具提示内容
+  // 格式化工具提示内容，处理可能的 undefined
   const customTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
@@ -81,7 +102,7 @@ const GanttChart: React.FC<GanttChartProps> = ({ versions }) => {
         <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
           <p className="font-semibold text-gray-800">{data.name}</p>
           <p className="text-sm text-gray-600">
-            {format(data.startDate, 'yyyy-MM-dd')} 至 {format(data.endDate, 'yyyy-MM-dd')}
+            {data.startDate ? format(data.startDate, 'yyyy-MM-dd') : '未知'} 至 {data.endDate ? format(data.endDate, 'yyyy-MM-dd') : '未知'}
           </p>
           <p className="text-sm text-gray-600">优先级: {data.priority}</p>
           <p className="text-sm text-gray-600">进度: {data.progress}%</p>
@@ -132,4 +153,4 @@ const GanttChart: React.FC<GanttChartProps> = ({ versions }) => {
   );
 };
 
-export default GanttChart; 
+export default GanttChart;    

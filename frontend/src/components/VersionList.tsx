@@ -1,10 +1,7 @@
+// VersionList.tsx
 import React, { useState, useEffect } from 'react';
-import { 
-  getAllVersions, 
-  deleteVersion, 
-  Version, 
-  Priority 
-} from '../services/api';
+import { getAllVersions, deleteVersion } from '../services/api';
+import { Version, Priority } from '../services/api'; // 确保导入的是更新后的 Version 接口
 import { format, parseISO } from 'date-fns';
 import VersionModal from './VersionModal';
 import GanttChart from './GanttChart';
@@ -62,15 +59,15 @@ const VersionList: React.FC = () => {
   };
 
   // 获取优先级标签
-  const getPriorityLabel = (priority: number) => {
+  const getPriorityLabel = (priority: Priority) => {
     switch (priority) {
-      case Priority.Low:
+      case Priority.LOW:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">低</span>;
-      case Priority.Medium:
+      case Priority.MEDIUM:
         return <span className="px-2 py-1 text-xs rounded-full bg-blue-200 text-blue-800">中</span>;
-      case Priority.High:
+      case Priority.HIGH:
         return <span className="px-2 py-1 text-xs rounded-full bg-orange-200 text-orange-800">高</span>;
-      case Priority.Critical:
+      case Priority.CRITICAL:
         return <span className="px-2 py-1 text-xs rounded-full bg-red-200 text-red-800">紧急</span>;
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">未知</span>;
@@ -93,6 +90,14 @@ const VersionList: React.FC = () => {
       default:
         return <span className="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">未知</span>;
     }
+  };
+
+  const formatDate = (date: Date | string | undefined): string => {
+    if (!date) return '';
+    if (typeof date === 'string') {
+      return format(parseISO(date), 'yyyy-MM-dd');
+    }
+    return format(date, 'yyyy-MM-dd');
   };
 
   return (
@@ -137,6 +142,9 @@ const VersionList: React.FC = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开始日期</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">结束日期</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">进度</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">需求完成时间</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">开发完成时间</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">测试完成时间</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
               </tr>
             </thead>
@@ -152,23 +160,28 @@ const VersionList: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">{version.summary}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {typeof version.start_date === 'string' 
-                      ? format(parseISO(version.start_date), 'yyyy-MM-dd')
-                      : format(version.start_date, 'yyyy-MM-dd')}
+                    {formatDate(version.start_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {typeof version.end_date === 'string'
-                      ? format(parseISO(version.end_date), 'yyyy-MM-dd')
-                      : format(version.end_date, 'yyyy-MM-dd')}
+                    {formatDate(version.end_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className="bg-blue-600 h-2.5 rounded-full" 
+                      <div
+                        className="bg-blue-600 h-2.5 rounded-full"
                         style={{ width: `${version.progress}%` }}
                       ></div>
                     </div>
                     <span className="text-xs text-gray-500 mt-1">{version.progress}%</span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(version.requirement_complete_date)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(version.development_complete_date)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatDate(version.testing_complete_date)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
@@ -188,7 +201,7 @@ const VersionList: React.FC = () => {
               ))}
               {versions.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan={11} className="px-6 py-4 text-center text-sm text-gray-500">
                     暂无版本数据
                   </td>
                 </tr>
@@ -208,4 +221,4 @@ const VersionList: React.FC = () => {
   );
 };
 
-export default VersionList; 
+export default VersionList;
