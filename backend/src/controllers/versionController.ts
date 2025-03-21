@@ -33,7 +33,7 @@ export const getVersionById = async (req: Request, res: Response) => {
 export const createVersion = async (req: Request, res: Response) => {
   try {
     const versions = (req as any).mockData.versions;
-    const { name, priority, summary, start_date, end_date, status, progress } = req.body as Version;
+    const { name, priority, summary, start_date, online_date, requirement_complete_date, development_complete_date, testing_complete_date, status, progress } = req.body as Version;
     
     // 查找最大ID
     const maxId = versions.reduce((max: number, v: any) => (v.id > max ? v.id : max), 0);
@@ -45,7 +45,10 @@ export const createVersion = async (req: Request, res: Response) => {
       priority,
       summary,
       start_date,
-      end_date,
+      online_date,
+      requirement_complete_date,
+      development_complete_date,
+      testing_complete_date,
       status,
       progress,
       created_at: new Date().toISOString().split('T')[0],
@@ -67,7 +70,7 @@ export const updateVersion = async (req: Request, res: Response) => {
   try {
     const versions = (req as any).mockData.versions;
     const id = parseInt(req.params.id);
-    const { name, priority, summary, start_date, end_date, status, progress } = req.body as Version;
+    const { name, priority, summary, start_date, online_date, requirement_complete_date, development_complete_date, testing_complete_date, status, progress } = req.body as Version;
     
     // 查找要更新的版本索引
     const index = versions.findIndex((v: any) => v.id === id);
@@ -83,7 +86,10 @@ export const updateVersion = async (req: Request, res: Response) => {
       priority,
       summary,
       start_date,
-      end_date,
+      online_date,
+      requirement_complete_date,
+      development_complete_date,
+      testing_complete_date,
       status,
       progress,
       updated_at: new Date().toISOString().split('T')[0]
